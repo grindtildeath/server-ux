@@ -73,8 +73,8 @@ class TierDefinition(models.Model):
     )
     has_comment = fields.Boolean(string="Comment", default=False)
     notify_reminder_delay = fields.Integer(
-        string="Remind notifier",
-        help="Number of days after which the user should be reminded (0 = no reminder)",
+        string="Send reminder message on pending reviews",
+        help="Number of days after which a message must be posted to remind about pending validation  (0 = no reminder)",
     )
     approve_sequence = fields.Boolean(
         string="Approve by sequence",
