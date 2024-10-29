@@ -245,43 +245,13 @@ class MassEditingWizard(models.TransientModel):
         return field_info
 
     @api.model_create_multi
-    def create(self, vals_list):  # noqa: C901
+    def create(self, vals_list):
         server_action_id = self.env.context.get("server_action_id")
         server_action = self.env["ir.actions.server"].sudo().browse(server_action_id)
         active_ids = self.env.context.get("active_ids", [])
         if server_action and active_ids:
             for vals in vals_list:
-                values = {}
-                for key, val in vals.items():
-                    if key.startswith("selection_"):
-                        split_key = key.split("__", 1)[1]
-                        if val == "set" or val == "add_o2m":
-                            values.update({split_key: vals.get(split_key, False)})
-
-                        elif val == "set_o2m":
-                            values.update(
-                                {split_key: [(6, 0, [])] + vals.get(split_key, [])}
-                            )
-
-                        elif val == "remove":
-                            values.update({split_key: False})
-
-                        elif val == "remove_m2m":
-                            m2m_list = []
-                            if vals.get(split_key):
-                                for m2m_id in vals.get(split_key)[0][2]:
-                                    m2m_list.append((3, m2m_id))
-                            if m2m_list:
-                                values.update({split_key: m2m_list})
-                            else:
-                                values.update({split_key: [(5, 0, [])]})
-
-                        elif val == "add":
-                            m2m_list = []
-                            for m2m_id in vals.get(split_key, False)[0][2]:
-                                m2m_list.append((4, m2m_id))
-                            values.update({split_key: m2m_list})
-
+                values = self._prepare_write_values(vals)
                 if values:
                     model = self.env[server_action.model_id.model].with_context(
                         mass_edit=True
@@ -315,6 +285,37 @@ class MassEditingWizard(models.TransientModel):
                         #  all the records at once
                         records.write(values)
         return super().create([{}])
+
+    def _prepare_write_values(self, vals):
+        values = {}
+        for key, val in vals.items():
+            if key.startswith("selection_"):
+                split_key = key.split("__", 1)[1]
+                if val == "set" or val == "add_o2m":
+                    values.update({split_key: vals.get(split_key, False)})
+
+                elif val == "set_o2m":
+                    values.update({split_key: [(6, 0, [])] + vals.get(split_key, [])})
+
+                elif val == "remove":
+                    values.update({split_key: False})
+
+                elif val == "remove_m2m":
+                    m2m_list = []
+                    if vals.get(split_key):
+                        for m2m_id in vals.get(split_key)[0][2]:
+                            m2m_list.append((3, m2m_id))
+                    if m2m_list:
+                        values.update({split_key: m2m_list})
+                    else:
+                        values.update({split_key: [(5, 0, [])]})
+
+                elif val == "add":
+                    m2m_list = []
+                    for m2m_id in vals.get(split_key, False)[0][2]:
+                        m2m_list.append((4, m2m_id))
+                    values.update({split_key: m2m_list})
+        return values
 
     def _prepare_create_values(self, vals_list):
         return vals_list
