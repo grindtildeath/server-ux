@@ -19,6 +19,10 @@ class IrActionsServer(models.Model):
         string="Apply domain in lines",
         compute="_compute_mass_edit_apply_domain_in_lines",
     )
+    mass_edit_play_onchanges = fields.Json(
+        string="Play onchanges from lines",
+        compute="_compute_mass_edit_play_onchanges",
+    )
     mass_edit_message = fields.Text(
         string="Message",
         help="If set, this message will be displayed in the wizard.",
@@ -45,6 +49,14 @@ class IrActionsServer(models.Model):
             record.mass_edit_apply_domain_in_lines = any(
                 record.mass_edit_line_ids.mapped("apply_domain")
             )
+
+    @api.depends("mass_edit_line_ids.apply_onchanges")
+    def _compute_mass_edit_play_onchanges(self):
+        for record in self:
+            record.mass_edit_play_onchanges = {
+                line.field_id.name: line.apply_onchanges
+                for line in record.mass_edit_line_ids
+            }
 
     def _run_action_mass_edit_multi(self, eval_context=None):
         """Show report label wizard"""

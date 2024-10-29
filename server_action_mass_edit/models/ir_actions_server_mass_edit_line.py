@@ -47,6 +47,7 @@ class IrActionsServerMassEditLine(models.Model):
         default=False,
         help="Apply default domain related to field",
     )
+    apply_onchanges = fields.Boolean(help="Play field onchanges before writing value")
 
     @api.constrains("server_action_id", "field_id")
     def _check_field_model(self):

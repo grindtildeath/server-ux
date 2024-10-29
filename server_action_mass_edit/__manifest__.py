@@ -14,6 +14,7 @@
     "summary": "Mass Editing",
     "depends": [
         "base",
+        "onchange_helper",
     ],
     "data": [
         "security/ir.model.access.csv",
